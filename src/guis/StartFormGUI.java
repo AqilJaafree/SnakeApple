@@ -1,9 +1,12 @@
 package guis;
 
 import constants.CommonConstants;
+import db.MyJDBC;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -59,32 +62,85 @@ public class StartFormGUI extends Form {
         startButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Dispose of the current StartFormGUI
-                dispose();
+                // get player username
+                String username = playernameField.getText();
 
-                // Create an instance of SnakeGame and set it up in a JFrame
-                SwingUtilities.invokeLater(() -> {
-                    JFrame frame = new JFrame("Snake");
-                    frame.setSize(800, 600);
-                    frame.setLocationRelativeTo(null);
-                    frame.setResizable(false);
-                    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                // validate user input
+                if (validateUserInput(username)) {
+                    // Check if the username already exists
+                    if (!MyJDBC.checkUser(username)) {
+                        // If the username doesn't exist, register the user
+                        if (MyJDBC.register(username, 0)) { // Assuming the initial score is 0
+                            // Dispose of the current StartFormGUI
+                            dispose();
 
-                    SnakeGame snakeGame = new SnakeGame(800, 600);
-                    frame.add(snakeGame);
-                    frame.pack();
+                            // Create an instance of SnakeGame and set it up in a JFrame
+                            SwingUtilities.invokeLater(() -> {
+                                JFrame frame = new JFrame("Snake");
+                                frame.setSize(800, 600);
+                                frame.setLocationRelativeTo(null);
+                                frame.setResizable(false);
+                                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    // Make the frame visible
-                    frame.setVisible(true);
+                                SnakeGame snakeGame = new SnakeGame(800, 600);
+                                frame.add(snakeGame);
+                                frame.pack();
 
-                    // Request focus for keyboard input
-                    snakeGame.requestFocus();
+                                // Make the frame visible
+                                frame.setVisible(true);
 
-                    // Start background music
-                    snakeGame.startBackgroundMusic();
-                });
+                                // Request focus for keyboard input
+                                snakeGame.requestFocus();
+
+                                // Start background music
+                                snakeGame.startBackgroundMusic();
+                            });
+                        } else {
+                            // Handle registration failure (e.g., show an error message)
+                            JOptionPane.showMessageDialog(
+                                    StartFormGUI.this,
+                                    "Failed to register user. Please try again.",
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE
+                            );
+                        }
+                    } else {
+                        // Username already exists, display an appropriate message
+                        JOptionPane.showMessageDialog(
+                                StartFormGUI.this,
+                                "Username already exists. Please choose a different username.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                } else {
+                    // Display an error message for invalid input
+                    JOptionPane.showMessageDialog(
+                            StartFormGUI.this,
+                            "Invalid username. Please enter a valid username.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
             }
         });
+
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //get player username
+                String username = playernameField.getText();
+
+
+            }
+        });
+
         add(startButton);
     }
+    private boolean validateUserInput(String username) {
+        //all field must have a value
+        if(username.length() == 0) return false;
+        return true;
+    }
+
 }
