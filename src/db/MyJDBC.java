@@ -66,4 +66,37 @@ public class MyJDBC {
         }
         return true;
     }
+    // Update the score for a given username
+    public static void updateScore(String username, int newScore) {
+        try (Connection connection = DriverManager.getConnection(
+                CommonConstants.DB_URL,
+                CommonConstants.DB_USERNAME,
+                CommonConstants.DB_PASSWORD
+        )) {
+            // Prepare the SQL statement for updating the score
+            try (PreparedStatement updateScoreStatement = connection.prepareStatement(
+                    "UPDATE " + CommonConstants.DB_PLAYERS_TABLE_NAME +
+                            " SET SCORE = ? WHERE LOWER(USERNAME) = LOWER(?)"
+            )) {
+                // Set parameters for the statement
+                updateScoreStatement.setInt(1, newScore);
+
+                // Add a null check before invoking trim()
+                if (username != null) {
+                    updateScoreStatement.setString(2, username.trim());
+                } else {
+                    // Handle the case where username is null (optional)
+                    System.out.println("Warning: Username is null.");
+                    return;
+                }
+
+                // Execute the update query
+                updateScoreStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

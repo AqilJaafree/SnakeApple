@@ -1,5 +1,6 @@
 package guis;
-
+import db.MyJDBC;
+import constants.CommonConstants;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -8,6 +9,9 @@ import java.util.Random;
 import javax.sound.sampled.*;
 
 public class SnakeGame extends JPanel implements ActionListener, KeyListener, MouseListener {
+    private MyJDBC myJDBC;
+    private boolean gameStarted = false;
+    private String currentPlayerUsername;
     private class Tile {
         int x;
         int y;
@@ -50,6 +54,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener, Mo
         addMouseListener(this);
         setFocusable(true);
 
+        myJDBC = new MyJDBC();  // Instantiate MyJDBC
         snakeHead = new Tile(5, 5);
         snakeBody = new ArrayList<>();
 
@@ -195,7 +200,14 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener, Mo
         if (gameOver) {
             gameLoop.stop();
             stopBackgroundMusic();
+
+            // Debug statement
+            System.out.println("Updating score for user: " + currentPlayerUsername);
+
+            // Update the score in the database when the game is over
+            MyJDBC.updateScore(currentPlayerUsername, snakeBody.size());
         }
+
     }
 
     @Override
@@ -224,6 +236,27 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     public void keyTyped(KeyEvent e) {
+        if (!gameStarted) {
+            // Get player username when typing for the first time
+            currentPlayerUsername = getPlayerUsername();
+            // Register the player in the database
+            MyJDBC.register(currentPlayerUsername, 0); // Initial score is set to 0
+        }
+    }
+
+
+    // Add a method to get player username using JOptionPane
+    private String getPlayerUsername() {
+        String username = JOptionPane.showInputDialog(this, "Enter your username:", "Player Registration", JOptionPane.PLAIN_MESSAGE);
+
+        // Check for null or empty username
+        if (username == null || username.trim().isEmpty()) {
+            // Handle this case appropriately, e.g., by prompting the user again
+            System.out.println("Invalid username entered.");
+            return getPlayerUsername();
+        }
+
+        return username.trim();
     }
 
     @Override
@@ -243,7 +276,12 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (gameOver) {
+        if (!gameStarted) {
+            // Start the game when clicked for the first time
+            gameStarted = true;
+            requestFocusInWindow();
+        } else if (gameOver) {
+            // Restart the game when clicked after game over
             restartGame();
             repaint();
         }
@@ -264,6 +302,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener, Mo
     @Override
     public void mouseExited(MouseEvent e) {
     }
+
 
     public void pauseGame() {
         gameLoop.stop();
@@ -295,5 +334,20 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener, Mo
             backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
+
+    private void updateScoreInDatabase(String username, int score) {
+
+
+        // Check if the username exists in the database
+        if (myJDBC.checkUser(username)) {
+            // If the username exists, update the score
+            myJDBC.updateScore(username, score);
+        } else {
+            // Handle the case where the username does not exist (optional)
+            System.out.println("Username not found in the database.");
+        }
+    }
+
+
 
 }

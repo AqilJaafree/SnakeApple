@@ -16,9 +16,25 @@ public class StartFormGUI extends Form {
         addGuiComponents();
     }
 
+    private ImageIcon resizeImageIcon(ImageIcon icon, int width, int height) {
+        Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        return new ImageIcon(image);
+    }
+
     private void addGuiComponents() {
+        // Load the snake.png image
+        ImageIcon originalSnakeIcon = new ImageIcon(getClass().getResource("/resources/snake.png"));
+        ImageIcon resizedSnakeIcon = resizeImageIcon(originalSnakeIcon, 150, 150);
+        JLabel snakeLabel = new JLabel(resizedSnakeIcon);
+
+        // Position and size of the image
+        snakeLabel.setBounds(200, 120, resizedSnakeIcon.getIconWidth(), resizedSnakeIcon.getIconHeight());
+
+        // Add the label to the form
+        add(snakeLabel);
+
         // create start label
-        JLabel startLabel = new JLabel("Start");
+        JLabel startLabel = new JLabel("Snake Apple");
 
         // configure components x, y position, width, and height relative to the GUI
         startLabel.setBounds(0, 25, 520, 100);
@@ -36,7 +52,7 @@ public class StartFormGUI extends Form {
         add(startLabel);
 
         // create playername label
-        JLabel playernameLabel = new JLabel("Playername");
+        JLabel playernameLabel = new JLabel("Player name");
         playernameLabel.setBounds(30, 335, 400, 25);
         playernameLabel.setForeground(CommonConstants.TEXT_COLOR);
         playernameLabel.setFont(new Font("Dialog", Font.PLAIN, 18));
@@ -52,7 +68,7 @@ public class StartFormGUI extends Form {
         add(playernameField);
 
         // create button start
-        JButton startButton = new JButton("Start");
+        JButton startButton = new JButton("Play");
         startButton.setFont(new Font("Dialog", Font.BOLD, 18));
 
         // change the cursor to a hand when hover over the button
@@ -130,17 +146,14 @@ public class StartFormGUI extends Form {
             public void actionPerformed(ActionEvent e) {
                 //get player username
                 String username = playernameField.getText();
-
-
             }
         });
 
         add(startButton);
     }
+
     private boolean validateUserInput(String username) {
         //all field must have a value
-        if(username.length() == 0) return false;
-        return true;
+        return username.length() != 0;
     }
-
 }
